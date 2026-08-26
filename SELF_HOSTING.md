@@ -35,6 +35,16 @@ open http://localhost:3000
 
 The dashboard works out of the box with public data sources (earthquakes, weather, conflicts, etc.). API keys unlock additional data feeds.
 
+### Optional OSINT Suite
+
+Velocity, IRONSIGHT, and Shadowbroker can be launched as isolated local services and used from the disabled-by-default **OSINT Suite** panel:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.osint-suite.yml up -d --build
+```
+
+The normal Compose stack is unchanged when the overlay is not supplied. See [OSINT_SUITE.md](OSINT_SUITE.md) for ports, optional credentials, security boundaries, and upstream licenses.
+
 ## 🔐 Required Environment Variables
 
 These must be set before `docker compose up -d`, or one of the containers will exit on boot.
