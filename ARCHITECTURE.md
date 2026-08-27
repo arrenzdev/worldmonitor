@@ -66,8 +66,11 @@ World Monitor is a real-time global intelligence dashboard built as a TypeScript
 | Documentation | Mintlify | Public docs, proxied through Vercel at `/docs` |
 | Desktop App | Tauri 2.x | macOS (ARM64, x64), Windows (x64), Linux (x64, ARM64) with bundled Node.js sidecar |
 | Container Image | GHCR | Multi-arch Docker image (nginx serving built SPA, proxies API to upstream) |
+| Optional OSINT Suite | Local Docker Compose overlay | Loopback-only Velocity, IRONSIGHT, and Shadowbroker applications embedded through a disabled-by-default panel |
 
-**Source files**: `vercel.json`, `docker/Dockerfile`, `scripts/ais-relay.cjs`, `consumer-prices-core/Dockerfile`, `workers/api-cors-preflight/wrangler.toml`, `convex/schema.ts`, `src-tauri/tauri.conf.json`
+**Source files**: `vercel.json`, `docker/Dockerfile`, `docker-compose.osint-suite.yml`, `docker/osint-suite/`, `scripts/ais-relay.cjs`, `consumer-prices-core/Dockerfile`, `workers/api-cors-preflight/wrangler.toml`, `convex/schema.ts`, `src-tauri/tauri.conf.json`
+
+The optional OSINT Suite is an additive local topology. The panel lazy-loads and mounts one sandboxed application iframe at a time; the default panel registry keeps it disabled. Browser-facing tool ports bind to loopback, while the tool backends remain on the Compose network. A loopback-only nginx bridge narrows Shadowbroker's otherwise frame-denying policy to local World Monitor origins without altering the upstream image.
 
 **Cloudflare zone config (dashboard-managed, NOT in this repo):** the apex `worldmonitor.app` → `www` 301 is a Cloudflare Dynamic Redirect rule ("apex to www (exclude agent-discoverable paths)") whose exemption list is load-bearing: `/.well-known/*`, `/robots.txt`, `/security.txt`, `/mcp`, `/mcp/*`, and `/oauth/*` are served on the apex, never redirected. Dropping the `/mcp*` exemptions breaks every apex-URL MCP client; dropping `/oauth/*` re-breaks OAuth dynamic client registration — a redirected POST becomes a GET and dies with 405 (issue #4938). When editing the rule, mind expression precedence: `and` binds tighter than `or`, so a new exemption must be added as its own `or` term **inside** the `not (…)` group (appending `and not …` after the last term is a silent no-op). `mcp-live-smoke.yml` probes the MCP/OAuth members of this list (`/mcp`, `/.well-known/oauth-authorization-server`, and the OAuth endpoints it declares) every 6 hours and fails on the redirect fingerprint; the `robots.txt` / `security.txt` exemptions are crawler-facing and have no automated probe.
 

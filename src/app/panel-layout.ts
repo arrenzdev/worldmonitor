@@ -237,6 +237,7 @@ export const DEFERRED_PANEL_NATURAL_FOOTPRINTS: Readonly<Record<string, Deferred
   'live-news': { className: 'panel-wide' },
   'live-webcams': { className: 'panel-wide' },
   'news-market-correlation': { rowSpan: 2, className: 'panel-wide' },
+  'osint-suite': { rowSpan: 4, className: 'panel-wide' },
   'oil-inventories': { rowSpan: 2 },
   'pipeline-status': { rowSpan: 2 },
   'sanctions-pressure': { rowSpan: 2 },
@@ -2445,6 +2446,7 @@ export class PanelLayoutManager implements AppModule {
 
     this.lazyDefaultPanel('live-webcams', () => import('@/components/LiveWebcamsPanel'), 'LiveWebcamsPanel');
     this.lazyDefaultPanel('windy-webcams', () => import('@/components/PinnedWebcamsPanel'), 'PinnedWebcamsPanel');
+    this.lazyDefaultPanel('osint-suite', () => import('@/components/OsintSuitePanel'), 'OsintSuitePanel');
 
     this.lazyPanel('events', () =>
       this.importPanel(

@@ -91,6 +91,7 @@ export const COMMANDS: Command[] = [
   { id: 'panel:live-news', keywords: ['news', 'live news', 'headlines'], label: 'Panel: Live News', icon: '\u{1F4F0}', category: 'panels' },
   { id: 'panel:intel', keywords: ['intel', 'intel feed', 'intelligence', 'osint'], label: 'Panel: Intel Feed', icon: '\u{1F50E}', category: 'panels' },
   { id: 'panel:gdelt-intel', keywords: ['gdelt', 'intelligence feed', 'live intelligence', 'global events'], label: 'Panel: Live Intelligence', icon: '\u{1F50D}', category: 'panels' },
+  { id: 'panel:osint-suite', keywords: ['osint suite', 'velocity', 'ironsight', 'shadowbroker', 'recon'], label: 'Panel: OSINT Suite', icon: '\u{1F9ED}', category: 'panels' },
   { id: 'panel:cii', keywords: ['cii', 'instability', 'country risk'], label: 'Panel: Country Instability', icon: '\u{1F3AF}', category: 'panels' },
   { id: 'panel:cascade', keywords: ['cascade', 'infrastructure cascade', 'cascading failure', 'contagion'], label: 'Panel: Infrastructure Cascade', icon: '\u{1F517}', category: 'panels' },
   { id: 'panel:strategic-risk', keywords: ['risk', 'strategic risk', 'threat level'], label: 'Panel: Strategic Risk', icon: '\u26A0\uFE0F', category: 'panels' },
