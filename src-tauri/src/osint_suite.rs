@@ -348,9 +348,9 @@ fn log_files(logs_root: &Path, name: &str) -> Result<(File, File), String> {
     Ok((stdout, stderr))
 }
 
-fn hide_console(command: &mut Command) {
+fn hide_console(_command: &mut Command) {
     #[cfg(windows)]
-    command.creation_flags(0x08000000);
+    _command.creation_flags(0x08000000);
 }
 
 fn prepend_runtime_path(command: &mut Command, context: &RuntimeContext) {
@@ -763,14 +763,14 @@ pub fn stop_managed_osint_suite(app: &AppHandle) {
             tool.status.state = "stopped".to_string();
             tool.status.url = None;
         }
-    }
+    };
 }
 
 #[tauri::command]
 pub fn get_osint_suite_runtime_status(
     state: tauri::State<'_, OsintSuiteState>,
 ) -> OsintSuiteRuntimeStatus {
-    let tools = state
+    let tools: Vec<OsintToolRuntimeStatus> = state
         .inner
         .tools
         .lock()
