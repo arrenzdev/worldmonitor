@@ -114,6 +114,13 @@ jobs:
           toolchain: stable
           targets: ${{ contains(matrix.platform, 'macos') && 'aarch64-apple-darwin,x86_64-apple-darwin' || (matrix.label == 'Linux-ARM64' && 'aarch64-unknown-linux-gnu' || '') }}
 
+      - name: Install Python for managed OSINT runtime
+        if: matrix.node_target == 'x86_64-pc-windows-msvc'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
+          architecture: 'x64'
+
       - name: Rust cache
         uses: swatinem/rust-cache@779680da715d629ac1d338a641029a2f4372abb5
         with:
@@ -205,6 +212,36 @@ jobs:
             test -x src-tauri/sidecar/node/node
             ls -lh src-tauri/sidecar/node/node
           fi
+
+      - name: Build managed OSINT Suite runtime
+        if: matrix.node_target == 'x86_64-pc-windows-msvc'
+        shell: pwsh
+        run: |
+          npm install --global corepack@0.34.0
+          corepack enable
+          node scripts/build-osint-suite-runtime.mjs --clean --platform windows-x64
+
+      - name: Verify managed OSINT Suite payload
+        if: matrix.node_target == 'x86_64-pc-windows-msvc'
+        shell: pwsh
+        run: |
+          $required = @(
+            'src-tauri/osint-suite/runtime/runtime-manifest.json',
+            'src-tauri/osint-suite/runtime/python/python.exe',
+            'src-tauri/osint-suite/runtime/velocity/apps/api/app/main.py',
+            'src-tauri/osint-suite/runtime/velocity/apps/web/dist/index.html',
+            'src-tauri/osint-suite/runtime/velocity/tools/adsb-globe-feeder/node_modules/playwright/package.json',
+            'src-tauri/osint-suite/runtime/ironsight/server.js',
+            'src-tauri/osint-suite/runtime/shadowbroker/backend/main.py',
+            'src-tauri/osint-suite/runtime/shadowbroker/backend/privacy_core.dll',
+            'src-tauri/osint-suite/runtime/shadowbroker/web/index.html'
+          )
+          foreach ($path in $required) {
+            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+              throw "Managed OSINT runtime asset missing: $path"
+            }
+          }
+          Get-Item src-tauri/osint-suite/runtime/runtime-manifest.json | Format-List FullName,Length
 
       # ── Detect whether Apple signing secrets are configured ──
       - name: Check Apple signing secrets

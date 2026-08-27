@@ -57,6 +57,7 @@
       "sidecar/local-api-server.mjs",
       "sidecar/package.json",
       "sidecar/node",
+      "osint-suite",
       "../data",
       "../src/config",
       "notices"

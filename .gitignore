@@ -76,6 +76,8 @@ internal/
 test-results/
 src-tauri/sidecar/node/*
 !src-tauri/sidecar/node/.gitkeep
+src-tauri/osint-suite/runtime/*
+!src-tauri/osint-suite/runtime/.gitkeep
 
 # AI planning session state
 .planning/

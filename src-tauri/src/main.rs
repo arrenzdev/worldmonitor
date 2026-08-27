@@ -1,6 +1,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod cache_bounds;
+mod osint_suite;
 
 use std::collections::HashMap;
 use std::env;
@@ -1919,6 +1920,7 @@ fn main() {
         .menu(build_app_menu)
         .on_menu_event(handle_menu_event)
         .manage(LocalApiState::default())
+        .manage(osint_suite::OsintSuiteState::default())
         .manage(SecretsCache::load_from_keychain())
         .invoke_handler(tauri::generate_handler![
             list_configured_secret_keys,
@@ -1940,7 +1942,8 @@ fn main() {
             close_live_channels_window,
             open_url,
             open_youtube_login,
-            fetch_polymarket
+            fetch_polymarket,
+            osint_suite::get_osint_suite_runtime_status
         ])
         .setup(|app| {
             // Load persistent cache into memory (avoids 14MB file I/O on every IPC call)
@@ -1955,6 +1958,11 @@ fn main() {
                 );
                 eprintln!("[tauri] local API sidecar failed to start: {err}");
             }
+
+            // Windows packages carry the optional OSINT applications as
+            // managed loopback services. This always starts off the UI thread;
+            // a missing payload degrades only the OSINT Suite panel.
+            osint_suite::start_managed_osint_suite(&app.handle());
 
             Ok(())
         })
@@ -2003,6 +2011,7 @@ fn main() {
                             let _ = cache.flush(&path);
                         }
                     }
+                    osint_suite::stop_managed_osint_suite(app);
                     stop_local_api(app);
                 }
                 _ => {}

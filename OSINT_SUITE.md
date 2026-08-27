@@ -1,8 +1,37 @@
-# Optional OSINT Suite
+# OSINT Suite
 
-World Monitor can host three independent OSINT applications in its disabled-by-default **OSINT Suite** panel. The integration is intentionally isolated: it does not replace World Monitor services, panels, data stores, or default Compose behavior.
+World Monitor can host three independent OSINT applications in its **OSINT Suite** panel. The integration is intentionally isolated: it does not replace World Monitor services, panels, data stores, or default Compose behavior.
 
-## Start the local suite
+## Windows desktop: one installer, no Docker
+
+The Windows x64 MSI/NSIS package includes pinned builds of Velocity, IRONSIGHT,
+and Shadowbroker together with private Python, Node.js, and Chromium runtimes.
+Installing Docker, Node.js, or Python separately is not required.
+
+When the World Monitor desktop app starts, its native process manager launches
+all three tools on dynamically selected `127.0.0.1` ports. The OSINT Suite panel
+is available by default in the desktop layout, resolves those ports through the
+native bridge, and opens Velocity automatically. Switching tabs opens the other
+tools inside the same panel. Closing World Monitor terminates the entire managed
+process tree.
+
+The first start can take up to 150 seconds while the data providers and browser
+feeds warm up. A provider that requires its own API key remains unavailable until
+that key is configured, but the other applications continue running.
+
+To assemble an unsigned Windows installer from source on Windows x64:
+
+```powershell
+npm ci
+npm run desktop:package:windows
+```
+
+The packaging command fetches the three upstream projects at the full commits
+recorded in `src-tauri/osint-suite/bundle-manifest.json`, builds their production
+assets, creates the private runtime, and then emits the normal World Monitor MSI
+and NSIS installers.
+
+## Docker/self-hosted mode
 
 First complete the normal steps in [SELF_HOSTING.md](SELF_HOSTING.md), including the required `.env` secrets. Then run:
 
@@ -10,7 +39,7 @@ First complete the normal steps in [SELF_HOSTING.md](SELF_HOSTING.md), including
 docker compose -f docker-compose.yml -f docker-compose.osint-suite.yml up -d --build
 ```
 
-Open `http://localhost:3000`, choose **Panels → Intelligence → OSINT Suite**, and enable it. The local endpoints are:
+Open `http://localhost:3000`, choose **Panels → Intelligence → OSINT Suite**, and enable it. The fixed Docker endpoints are:
 
 | Tool | Endpoint | Included capabilities |
 | --- | --- | --- |
@@ -42,12 +71,12 @@ The overlay reuses common World Monitor values such as `FINNHUB_API_KEY`, `NASA_
 
 ## Upstream projects and licenses
 
-This integration runs upstream container images or a pinned upstream build; it does not relicense them.
+This integration runs upstream container images or pinned upstream builds; it does not relicense them.
 
 | Project | Upstream | License | Integration form |
 | --- | --- | --- | --- |
-| Velocity | [AndrewCTF/velocity](https://github.com/AndrewCTF/velocity) | AGPL-3.0 | Published API/web images |
+| Velocity | [AndrewCTF/velocity](https://github.com/AndrewCTF/velocity) | AGPL-3.0 | Published API/web images or pinned Windows build |
 | IRONSIGHT | [NoblerWorks-HQ/IRONSIGHT](https://github.com/NoblerWorks-HQ/IRONSIGHT) | MIT | Source build pinned to `2e7005cf7eef191cbad55bc5fca09c19e77d7b84` |
-| Shadowbroker | [BigBodyCobain/Shadowbroker](https://github.com/BigBodyCobain/Shadowbroker) | AGPL-3.0 | Published backend/frontend images |
+| Shadowbroker | [BigBodyCobain/Shadowbroker](https://github.com/BigBodyCobain/Shadowbroker) | AGPL-3.0 | Published images or pinned Windows build |
 
 World Monitor is AGPL-3.0-only. Making a repository private does not remove AGPL obligations when a modified AGPL service is provided to other users over a network; retain notices and provide the corresponding source as required by each upstream license.
