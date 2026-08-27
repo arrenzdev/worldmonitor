@@ -16,10 +16,11 @@ const hasFlag = (name) => args.includes(`--${name}`);
 const os = getArg('os');
 const sign = hasFlag('sign');
 const skipNodeRuntime = hasFlag('skip-node-runtime');
+const skipOsintSuiteRuntime = hasFlag('skip-osint-suite-runtime');
 const showHelp = hasFlag('help') || hasFlag('h');
 
 const validOs = new Set(['macos', 'windows', 'linux']);
-const USAGE = 'Usage: npm run desktop:package -- --os <macos|windows|linux> [--sign] [--skip-node-runtime]';
+const USAGE = 'Usage: npm run desktop:package -- --os <macos|windows|linux> [--sign] [--skip-node-runtime] [--skip-osint-suite-runtime]';
 
 if (showHelp) {
   console.log(USAGE);
@@ -136,6 +137,26 @@ if (!skipNodeRuntime) {
   }
   if ((downloadResult.status ?? 1) !== 0) {
     process.exit(downloadResult.status ?? 1);
+  }
+}
+
+if (os === 'windows' && !skipOsintSuiteRuntime) {
+  console.log('[desktop-package] Building managed Velocity, IRONSIGHT, and Shadowbroker runtime');
+  const osintResult = spawnSync(process.execPath, [
+    'scripts/build-osint-suite-runtime.mjs',
+    '--platform',
+    'windows-x64',
+  ], {
+    env,
+    stdio: 'inherit',
+    shell: process.platform === 'win32'
+  });
+  if (osintResult.error) {
+    console.error(osintResult.error.message);
+    process.exit(1);
+  }
+  if ((osintResult.status ?? 1) !== 0) {
+    process.exit(osintResult.status ?? 1);
   }
 }
 

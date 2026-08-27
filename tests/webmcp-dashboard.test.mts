@@ -46,7 +46,7 @@ const EXPECTED_VARIANT_DEFAULT_SNAPSHOTS: Record<DashboardVariant, {
   enabled: number;
   sha256: string;
 }> = {
-  full: { total: 109, enabled: 87, sha256: '9b761c8ce3685acbcc233b25b639d1998fbdb3d303cd6d9cbc5b8da1e53d4958' },
+  full: { total: 110, enabled: 87, sha256: '02057101dff6851284cbb572f5b855f2bed9968ffcf61ce55288bda74dae52e5' },
   tech: { total: 41, enabled: 38, sha256: '43d7c788ff599baae171f7f46532653370e03ca4d322a8e6614f9f0a1cee5045' },
   finance: { total: 65, enabled: 60, sha256: 'cfcd641367902fe1966986633577763df178f5a1ea9d22038aa350276b55abbb' },
   commodity: { total: 36, enabled: 33, sha256: 'cc9e0b178dec33dff354a1eea95b5b215302fc7ce685b3d92b82a356df6d6bee' },

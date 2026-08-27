@@ -1,3 +1,5 @@
+import { hasTauriInvokeBridge, tryInvokeTauri } from './tauri-bridge';
+
 export type OsintToolId = 'velocity' | 'ironsight' | 'shadowbroker';
 
 export interface OsintToolDefinition {
@@ -10,6 +12,21 @@ export interface OsintToolDefinition {
 }
 
 export type OsintSuiteUrls = Record<OsintToolId, string>;
+
+export type ManagedOsintToolState = 'pending' | 'starting' | 'ready' | 'failed' | 'unavailable' | 'stopped';
+
+export interface ManagedOsintToolStatus {
+  id: OsintToolId;
+  state: ManagedOsintToolState;
+  url?: string | null;
+  message?: string | null;
+}
+
+export interface ManagedOsintSuiteStatus {
+  bundled: boolean;
+  platform: string;
+  tools: ManagedOsintToolStatus[];
+}
 
 export const OSINT_SUITE_STORAGE_KEY = 'worldmonitor-osint-suite-v1';
 
@@ -106,4 +123,29 @@ export function saveOsintSuiteUrls(urls: OsintSuiteUrls, storage?: StorageWriter
   } catch {
     return false;
   }
+}
+
+export async function getManagedOsintSuiteStatus(): Promise<ManagedOsintSuiteStatus | null> {
+  if (!hasTauriInvokeBridge()) return null;
+  return tryInvokeTauri<ManagedOsintSuiteStatus>('get_osint_suite_runtime_status');
+}
+
+export function applyManagedOsintSuiteUrls(
+  urls: OsintSuiteUrls,
+  status: ManagedOsintSuiteStatus | null,
+): OsintSuiteUrls {
+  if (!status?.bundled) return { ...urls };
+  const resolved = { ...urls };
+  for (const tool of status.tools) {
+    if (tool.state !== 'ready' || !tool.url) continue;
+    const managedUrl = normalizeOsintToolUrl(tool.url);
+    if (!managedUrl) continue;
+    // A user-configured HTTPS deployment remains authoritative. Only replace
+    // the documented local default, which is a placeholder in managed desktop
+    // builds because the native manager deliberately chooses an available port.
+    if (resolved[tool.id] === DEFAULT_OSINT_SUITE_URLS[tool.id]) {
+      resolved[tool.id] = managedUrl;
+    }
+  }
+  return resolved;
 }

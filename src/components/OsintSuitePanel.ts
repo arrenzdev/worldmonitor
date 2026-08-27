@@ -2,11 +2,14 @@ import { Panel } from './Panel';
 import { openExternalUrl } from '@/services/external-navigation';
 import {
   DEFAULT_OSINT_SUITE_URLS,
+  applyManagedOsintSuiteUrls,
+  getManagedOsintSuiteStatus,
   loadOsintSuiteUrls,
   normalizeOsintToolUrl,
   OSINT_TOOLS,
   saveOsintSuiteUrls,
   type OsintSuiteUrls,
+  type ManagedOsintSuiteStatus,
   type OsintToolDefinition,
   type OsintToolId,
 } from '@/services/osint-suite';
@@ -16,6 +19,7 @@ export class OsintSuitePanel extends Panel {
   private urls: OsintSuiteUrls = loadOsintSuiteUrls();
   private iframe: HTMLIFrameElement | null = null;
   private hasLaunched = false;
+  private managedStatus: ManagedOsintSuiteStatus | null = null;
 
   constructor() {
     super({
@@ -26,6 +30,7 @@ export class OsintSuitePanel extends Panel {
       defaultRowSpan: 4,
     });
     this.renderWorkspace();
+    void this.initializeManagedDesktopRuntime();
   }
 
   private get activeTool(): OsintToolDefinition {
@@ -67,7 +72,7 @@ export class OsintSuitePanel extends Panel {
         this.activeToolId = tool.id;
         const relaunch = this.hasLaunched;
         this.renderWorkspace();
-        if (relaunch) this.launchActiveTool();
+        if (relaunch) void this.launchActiveTool();
       }, { signal: this.signal });
       tabs.appendChild(tab);
     }
@@ -76,7 +81,7 @@ export class OsintSuitePanel extends Panel {
     actions.className = 'osint-suite-actions';
 
     const reloadButton = this.createActionButton('Reload', 'Reload selected OSINT tool', () => {
-      this.launchActiveTool();
+      void this.launchActiveTool();
     });
     const externalButton = this.createActionButton('Open ↗', 'Open selected OSINT tool in a new window', () => {
       void openExternalUrl(this.urls[this.activeToolId]);
@@ -121,7 +126,7 @@ export class OsintSuitePanel extends Panel {
     launchButton.type = 'button';
     launchButton.className = 'osint-suite-launch';
     launchButton.textContent = `Launch ${this.activeTool.name}`;
-    launchButton.addEventListener('click', () => this.launchActiveTool(), { signal: this.signal });
+    launchButton.addEventListener('click', () => void this.launchActiveTool(), { signal: this.signal });
 
     const sourceButton = document.createElement('button');
     sourceButton.type = 'button';
@@ -139,7 +144,14 @@ export class OsintSuitePanel extends Panel {
     viewport.appendChild(intro);
     shell.append(toolbar, viewport);
     this.setContentNodes(shell);
-    this.setSuiteBadge('READY', 'idle');
+    const managed = this.managedStatus?.tools.find((tool) => tool.id === this.activeToolId);
+    if (managed?.state === 'starting' || managed?.state === 'pending') {
+      this.setSuiteBadge('STARTING', 'loading');
+    } else if (managed?.state === 'failed' || managed?.state === 'unavailable') {
+      this.setSuiteBadge('ATTENTION', 'warning');
+    } else {
+      this.setSuiteBadge('READY', 'idle');
+    }
   }
 
   private createActionButton(label: string, title: string, onClick: () => void): HTMLButtonElement {
@@ -152,11 +164,53 @@ export class OsintSuitePanel extends Panel {
     return button;
   }
 
-  private launchActiveTool(): void {
+  private async initializeManagedDesktopRuntime(): Promise<void> {
+    const status = await this.refreshManagedRuntime();
+    if (!status?.bundled || this.signal.aborted) return;
+    this.renderWorkspace();
+    void this.launchActiveTool();
+  }
+
+  private async refreshManagedRuntime(): Promise<ManagedOsintSuiteStatus | null> {
+    const status = await getManagedOsintSuiteStatus();
+    if (status) {
+      this.managedStatus = status;
+      this.urls = applyManagedOsintSuiteUrls(this.urls, status);
+    }
+    return status;
+  }
+
+  private async waitForManagedTool(): Promise<string | null> {
+    const startedAt = Date.now();
+    while (!this.signal.aborted && Date.now() - startedAt < 150_000) {
+      const status = await this.refreshManagedRuntime();
+      const tool = status?.tools.find((candidate) => candidate.id === this.activeToolId);
+      if (!tool || !status?.bundled) return this.urls[this.activeToolId];
+      if (tool.state === 'ready' && tool.url) return this.urls[this.activeToolId];
+      if (tool.state === 'failed' || tool.state === 'unavailable' || tool.state === 'stopped') {
+        return null;
+      }
+      this.setSuiteBadge('STARTING', 'loading');
+      await new Promise((resolve) => window.setTimeout(resolve, 750));
+    }
+    return null;
+  }
+
+  private async launchActiveTool(): Promise<void> {
     const viewport = this.content.querySelector<HTMLElement>('.osint-suite-viewport');
     if (!viewport) return;
 
-    const target = this.urls[this.activeToolId];
+    const target = await this.waitForManagedTool();
+    if (!target || this.signal.aborted) {
+      const tool = this.managedStatus?.tools.find((candidate) => candidate.id === this.activeToolId);
+      this.hasLaunched = false;
+      this.setSuiteBadge('UNAVAILABLE', 'warning');
+      this.renderEmbedWarning(
+        viewport,
+        tool?.message ?? 'The managed service did not become ready. Check the OSINT logs from World Monitor settings.',
+      );
+      return;
+    }
     const parsed = new URL(target);
     if (window.location.protocol === 'https:' && parsed.protocol === 'http:') {
       this.hasLaunched = false;

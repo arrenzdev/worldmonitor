@@ -37,13 +37,13 @@ The dashboard works out of the box with public data sources (earthquakes, weathe
 
 ### Optional OSINT Suite
 
-Velocity, IRONSIGHT, and Shadowbroker can be launched as isolated local services and used from the disabled-by-default **OSINT Suite** panel:
+Velocity, IRONSIGHT, and Shadowbroker can be launched as isolated local services and used from the web app's disabled-by-default **OSINT Suite** panel:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.osint-suite.yml up -d --build
 ```
 
-The normal Compose stack is unchanged when the overlay is not supplied. See [OSINT_SUITE.md](OSINT_SUITE.md) for ports, optional credentials, security boundaries, and upstream licenses.
+The normal Compose stack is unchanged when the overlay is not supplied. The Windows desktop installer has a separate managed mode that requires no Docker, Node.js, or Python installation. See [OSINT_SUITE.md](OSINT_SUITE.md) for desktop behavior, ports, optional credentials, security boundaries, and upstream licenses.
 
 ## 🔐 Required Environment Variables
 

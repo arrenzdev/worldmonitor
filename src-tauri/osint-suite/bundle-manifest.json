@@ -1,0 +1,20 @@
+{
+  "schema": "worldmonitor-osint-suite-bundle/v1",
+  "bundleVersion": "1",
+  "platform": "windows-x64",
+  "pythonVersion": "3.12",
+  "upstreams": {
+    "velocity": {
+      "repository": "https://github.com/AndrewCTF/velocity.git",
+      "commit": "89d4983bd842e70d99de2abee255ea89c0bc863b"
+    },
+    "ironsight": {
+      "repository": "https://github.com/NoblerWorks-HQ/IRONSIGHT.git",
+      "commit": "2e7005cf7eef191cbad55bc5fca09c19e77d7b84"
+    },
+    "shadowbroker": {
+      "repository": "https://github.com/BigBodyCobain/Shadowbroker.git",
+      "commit": "cd6395f5ee7d5232fc7b553bf74f5e514deaafdb"
+    }
+  }
+}

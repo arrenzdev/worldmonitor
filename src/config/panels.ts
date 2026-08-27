@@ -34,7 +34,7 @@ const FULL_PANELS: Record<string, PanelConfig> = {
   'strategic-risk': { name: 'Strategic Risk Overview', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
   intel: { name: 'Intel Feed', enabled: true, priority: 1 },
   'gdelt-intel': { name: 'Live Intelligence', enabled: true, priority: 1, ...(_desktop && { premium: 'enhanced' as const }) },
-  'osint-suite': { name: 'OSINT Suite', enabled: false, priority: 2 },
+  'osint-suite': { name: 'OSINT Suite', enabled: _desktop, priority: 2 },
   cascade: { name: 'Infrastructure Cascade', enabled: true, priority: 1 },
   'military-correlation': { name: 'Force Posture', enabled: true, priority: 2 },
   'escalation-correlation': { name: 'Escalation Monitor', enabled: true, priority: 2 },
